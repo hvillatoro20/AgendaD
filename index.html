@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Diaria Profesional</title>
+    <style>
+        :root {
+            --color-pendiente: #FF0000;
+            --color-progreso: #FFD700;
+            --color-completado: #00AA00;
+            --color-fondo: #f5f7fa;
+            --color-borde: #e1e4e8;
+            --color-texto: #24292e;
+            --color-boton: #0366d6;
+            --color-boton-hover: #035fc7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--color-texto);
+            background-color: var(--color-fondo);
+            margin: 0;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .fecha-actual {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        .formulario-tarea {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1.5fr auto;
+            gap: 10px;
+            margin-bottom: 25px;
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .formulario-tarea {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--color-borde);
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        button {
+            background-color: var(--color-boton);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            height: 40px;
+        }
+
+        button:hover {
+            background-color: var(--color-boton-hover);
+        }
+
+        .lista-tareas {
+            border: 1px solid var(--color-borde);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .tarea-item {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--color-borde);
+        }
+
+        .tarea-item:last-child {
+            border-bottom: none;
+        }
+
+        .hora-tarea {
+            font-weight: 600;
+            color: #57606a;
+        }
+
+        .texto-tarea {
+            display: flex;
+            align-items: center;
+        }
+
+        .estado-botones {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-estado {
+            padding: 5px 10px;
+            font-size: 0.8em;
+            border-radius: 3px;
+        }
+
+        .btn-pendiente {
+            background-color: #f1f1f1;
+            color: var(--color-texto);
+        }
+
+        .btn-progreso {
+            background-color: #fff8e1;
+            color: #ffab00;
+        }
+
+        .btn-completado {
+            background-color: #e6ffed;
+            color: #00aa00;
+        }
+
+        .pendiente {
+            color: var(--color-pendiente);
+        }
+
+        .en-progreso {
+            color: var(--color-progreso);
+        }
+
+        .completada {
+            color: var(--color-completado);
+        }
+
+        .proyecto {
+            background-color: #f0f5ff;
+            color: #0366d6;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .no-tareas {
+            text-align: center;
+            padding: 20px;
+            color: #57606a;
+        }
+
+        .icono-estado {
+            margin-right: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Agenda Diaria</h1>
+        <div class="fecha-actual" id="fecha-actual"></div>
+        
+        <div class="formulario-tarea">
+            <div class="form-group">
+                <label for="hora-tarea">Hora</label>
+                <select id="hora-tarea" required>
+                    <!-- Las opciones se generarán con JavaScript -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="texto-tarea">Tarea</label>
+                <input type="text" id="texto-tarea" placeholder="Descripción de la tarea" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="proyecto-tarea">Proyecto</label>
+                <input type="text" id="proyecto-tarea" placeholder="Nombre del proyecto" required>
+            </div>
+            
+            <button id="agregar-tarea">Agregar Tarea</button>
+        </div>
+        
+        <div class="lista-tareas" id="lista-tareas">
+            <!-- Las tareas se agregarán aquí dinámicamente -->
+            <div class="no-tareas">No hay tareas programadas para hoy. ¡Agrega tu primera tarea!</div>
+        </div>
+    </div>
+
+    <script>
+        // Obtener elementos del DOM
+        const fechaActualElement = document.getElementById('fecha-actual');
+        const horaTareaSelect = document.getElementById('hora-tarea');
+        const textoTareaInput = document.getElementById('texto-tarea');
+        const proyectoTareaInput = document.getElementById('proyecto-tarea');
+        const agregarTareaBtn = document.getElementById('agregar-tarea');
+        const listaTareasDiv = document.getElementById('lista-tareas');
+
+        // Clave para el localStorage
+        const STORAGE_KEY = 'agendaDiariaTareas';
+
+        // Generar opciones de hora (7:00 AM a 6:00 PM en incrementos de 30 minutos)
+        function generarOpcionesHoras() {
+            const horas = [];
+            for (let hora = 7; hora <= 18; hora++) {
+                for (let minuto = 0; minuto < 60; minuto += 30) {
+                    const horaFormato24 = `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
+                    let horaFormato12 = hora % 12 || 12;
+                    const amPm = hora < 12 ? 'AM' : 'PM';
+                    horas.push({
+                        formato24: horaFormato24,
+                        display: `${horaFormato12}:${minuto.toString().padStart(2, '0')} ${amPm}`
+                    });
+                }
+            }
+            return horas;
+        }
+
+        // Llenar el selector de horas
+        function llenarSelectorHoras() {
+            const horas = generarOpcionesHoras();
+            horas.forEach(hora => {
+                const option = document.createElement('option');
+                option.value = hora.formato24;
+                option.textContent = hora.display;
+                horaTareaSelect.appendChild(option);
+            });
+        }
+
+        // Mostrar la fecha actual
+        function mostrarFechaActual() {
+            const ahora = new Date();
+            const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            fechaActualElement.textContent = ahora.toLocaleDateString('es-ES', opciones);
+        }
+
+        // Cargar tareas desde localStorage
+        function cargarTareas() {
+            const tareasGuardadas = localStorage.getItem(STORAGE_KEY);
+            return tareasGuardadas ? JSON.parse(tareasGuardadas) : [];
+        }
+
+        // Guardar tareas en localStorage
+        function guardarTareas(tareas) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tareas));
+        }
+
+        // Renderizar todas las tareas
+        function renderizarTareas() {
+            const tareas = cargarTareas();
+            
+            if (tareas.length === 0) {
+                listaTareasDiv.innerHTML = '<div class="no-tareas">No hay tareas programadas para hoy. ¡Agrega tu primera tarea!</div>';
+                return;
+            }
+            
+            // Ordenar tareas por hora
+            tareas.sort((a, b) => a.hora.localeCompare(b.hora));
+            
+            listaTareasDiv.innerHTML = '';
+            
+            tareas.forEach((tarea, index) => {
+                const tareaItem = document.createElement('div');
+                tareaItem.className = 'tarea-item';
+                
+                // Determinar icono y clase según estado
+                let icono, claseEstado;
+                switch (tarea.estado) {
+                    case 'pendiente':
+                        icono = '✖️';
+                        claseEstado = 'pendiente';
+                        break;
+                    case 'en-progreso':
+                        icono = '🟡';
+                        claseEstado = 'en-progreso';
+                        break;
+                    case 'completada':
+                        icono = '✔️';
+                        claseEstado = 'completada';
+                        break;
+                }
+                
+                tareaItem.innerHTML = `
+                    <div class="hora-tarea">${tarea.hora}</div>
+                    <div class="texto-tarea ${claseEstado}">
+                        <span class="icono-estado">${icono}</span>
+                        ${tarea.tarea}
+                        <span class="proyecto">${tarea.proyecto}</span>
+                    </div>
+                    <div class="estado-botones">
+                        <button class="btn-estado btn-pendiente" data-index="${index}" data-estado="pendiente">Pendiente</button>
+                        <button class="btn-estado btn-progreso" data-index="${index}" data-estado="en-progreso">En Progreso</button>
+                        <button class="btn-estado btn-completado" data-index="${index}" data-estado="completada">Completada</button>
+                    </div>
+                `;
+                
+                listaTareasDiv.appendChild(tareaItem);
+            });
+            
+            // Agregar event listeners a los botones de estado
+            document.querySelectorAll('.btn-estado').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    const nuevoEstado = this.getAttribute('data-estado');
+                    cambiarEstadoTarea(index, nuevoEstado);
+                });
+            });
+        }
+
+        // Agregar una nueva tarea
+        function agregarTarea() {
+            const hora = horaTareaSelect.value;
+            const tarea = textoTareaInput.value.trim();
+            const proyecto = proyectoTareaInput.value.trim();
+            
+            if (!tarea || !proyecto) {
+                alert('Por favor, completa todos los campos');
+                return;
+            }
+            
+            const nuevaTarea = {
+                hora,
+                tarea,
+                proyecto,
+                estado: 'pendiente'
+            };
+            
+            const tareas = cargarTareas();
+            tareas.push(nuevaTarea);
+            guardarTareas(tareas);
+            
+            // Limpiar campos y renderizar
+            textoTareaInput.value = '';
+            proyectoTareaInput.value = '';
+            renderizarTareas();
+        }
+
+        // Cambiar el estado de una tarea
+        function cambiarEstadoTarea(index, nuevoEstado) {
+            const tareas = cargarTareas();
+            if (index >= 0 && index < tareas.length) {
+                tareas[index].estado = nuevoEstado;
+                guardarTareas(tareas);
+                renderizarTareas();
+            }
+        }
+
+        // Inicializar la aplicación
+        function init() {
+            mostrarFechaActual();
+            llenarSelectorHoras();
+            renderizarTareas();
+            
+            // Event listeners
+            agregarTareaBtn.addEventListener('click', agregarTarea);
+            
+            // Permitir agregar con Enter
+            textoTareaInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') agregarTarea();
+            });
+            
+            proyectoTareaInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') agregarTarea();
+            });
+        }
+
+        // Iniciar la aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
